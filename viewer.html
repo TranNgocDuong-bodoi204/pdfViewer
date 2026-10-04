@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trình xem PDF</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <section id="reader-view" hidden>
+    <div id="stage">
+    <div id="book-view">
+      <div id="pages">
+        <canvas id="left-canvas" class="page-canvas"></canvas>
+        <canvas id="right-canvas" class="page-canvas"></canvas>
+        <div id="curl"><div class="reveal"></div><div class="flap"></div></div>
+      </div>
+    </div>
+    <button id="toc-btn" type="button" title="Mục lục (T)" aria-expanded="false" aria-controls="toc-panel">Mục lục</button>
+    <button id="browse-btn" type="button" title="Xem tất cả trang (V)" aria-expanded="false" aria-controls="browse-panel">Xem tất cả</button>
+    <aside id="toc-panel" aria-label="Mục lục" hidden>
+      <header>
+        <strong id="toc-title">Mục lục</strong>
+        <label id="toc-offset-wrap" title="Trang PDF = số trang in trong sách + độ lệch" hidden>Lệch <input id="toc-offset" type="number" step="1"></label>
+        <button id="toc-done-btn" type="button" hidden>Xong</button>
+        <button id="toc-change-btn" type="button" hidden>Đổi trang</button>
+        <button id="toc-close-btn" type="button">Đóng</button>
+      </header>
+      <div id="toc-body"></div>
+    </aside>
+    <aside id="browse-panel" aria-label="Xem tất cả trang" hidden>
+      <header>
+        <strong>Tất cả các trang</strong>
+        <button id="browse-close-btn" type="button">Đóng</button>
+      </header>
+      <div id="browse-body"></div>
+    </aside>
+    </div>
+    <div id="top-right">
+      <input id="page-input" type="number" min="1" step="1" aria-label="Đi tới trang">
+      <span aria-hidden="true">|</span>
+      <span id="page-total" aria-label="Tổng số trang">0</span>
+      <button id="fullscreen-btn" type="button" title="Toàn màn hình" aria-label="Toàn màn hình">
+        <svg class="icon-enter" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>
+        <svg class="icon-exit" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4"/></svg>
+      </button>
+    </div>
+    <nav id="controls" aria-label="Menu điều khiển">
+      <div class="group"><button id="open-btn" type="button">Quay lại</button></div>
+      <div class="group">
+        <button id="prev-btn" type="button" aria-label="Trang trước">Trước</button>
+        <button id="next-btn" type="button" aria-label="Trang sau">Sau</button>
+      </div>
+      <div class="group">
+        <button id="zoom-out-btn" type="button" aria-label="Thu nhỏ">-</button>
+        <input id="zoom-input" type="number" min="25" max="400" step="1" aria-label="Mức zoom (%)">%
+        <button id="zoom-in-btn" type="button" aria-label="Phóng to">+</button>
+        <button id="zoom-reset-btn" type="button">Reset zoom</button>
+      </div>
+      <div class="group">
+        <button id="menu-hide-btn" type="button" aria-label="Ẩn menu điều khiển">Ẩn</button>
+      </div>
+    </nav>
+    <button id="menu-open-btn" type="button" aria-label="Hiện menu điều khiển" hidden>Menu</button>
+  </section>
+  <script type="module" src="./PDFviewer.js"></script>
+</body>
+</html>
