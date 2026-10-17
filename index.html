@@ -1,67 +1,306 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Trình xem PDF của mình</title>
+  <title>Trình xem PDF - Không Gian Đọc Sách Chuyên Nghiệp</title>
   <link rel="stylesheet" href="./style.css">
 </head>
-<body>
-  <input id="file-input" type="file" accept="application/pdf" hidden>
 
-  <!-- Màn hình 1: hiện khi chưa có file -->
-  <section id="import-view">
-    <div id="drop-zone">
-      <h1>Trình xem PDF</h1>
-      <p>Kéo thả file PDF vào đây hoặc chọn từ máy của bạn.</p>
-      <label class="btn primary" for="file-input">Chọn file PDF</label>
-      <p id="import-message" role="status"></p>
+<body>
+  <div id="index-wrapper">
+    <!-- Nút đổi theme ở góc -->
+    <div class="theme-toggle-corner">
+      <div class="theme-switch-group">
+        <button type="button" class="segmented-btn active" data-theme-val="light" title="Chế độ Sáng">☀️</button>
+        <button type="button" class="segmented-btn" data-theme-val="sepia" title="Chế độ Màu ấm Sepia">📖</button>
+        <button type="button" class="segmented-btn" data-theme-val="dark" title="Chế độ Tối">🌙</button>
+      </div>
     </div>
-  </section>
+
+    <!-- Thương hiệu ứng dụng -->
+    <header class="app-brand">
+      <div class="app-brand-logo">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+          <path d="M6 6h10"></path>
+          <path d="M6 10h10"></path>
+        </svg>
+      </div>
+      <div>
+        <h1>pdfREADER</h1>
+        <p style="margin: 2px 0 0; font-size: 0.8125rem; color: var(--muted);">Không gian đọc tài liệu mượt mà & tinh tế
+        </p>
+      </div>
+    </header>
+
+    <input id="file-input" type="file" accept="application/pdf" hidden>
+
+    <!-- Hộp nạp file trung tâm -->
+    <section id="import-card">
+      <div id="drop-zone">
+        <div class="upload-icon-wrapper">
+          <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </div>
+        <h2 class="drop-title">Mở tài liệu PDF của bạn</h2>
+        <p class="drop-desc">Kéo và thả file PDF vào đây hoặc chọn trực tiếp từ thiết bị.</p>
+
+        <div class="drop-actions">
+          <label class="btn primary" for="file-input">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+            Chọn file PDF
+          </label>
+          <button id="sample-btn" type="button" class="btn ghost">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polygon points="10 8 16 12 10 16 10 8"></polygon>
+            </svg>
+            Đọc thử sách mẫu
+          </button>
+        </div>
+        <p id="import-message" role="status"></p>
+      </div>
+    </section>
+
+    <!-- Tủ sách gần đây (Recent Bookshelf) -->
+    <section id="recent-section" hidden>
+      <div class="recent-header">
+        <div class="recent-title">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          Tài liệu đã đọc gần đây
+        </div>
+        <button id="clear-recents-btn" type="button" class="btn ghost" style="font-size: 0.75rem; padding: 4px 8px;">Xóa
+          lịch sử</button>
+      </div>
+      <div id="recent-grid" class="recent-grid"></div>
+    </section>
+  </div>
 
   <script type="module">
+    // Khởi tạo Theme
+    const savedTheme = localStorage.getItem("readerTheme") || "light";
+    document.documentElement.dataset.theme = savedTheme;
+    document.querySelectorAll(".segmented-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.themeVal === savedTheme);
+      btn.addEventListener("click", () => {
+        const t = btn.dataset.themeVal;
+        document.documentElement.dataset.theme = t;
+        localStorage.setItem("readerTheme", t);
+        document.querySelectorAll(".segmented-btn").forEach(b => b.classList.toggle("active", b === btn));
+      });
+    });
+
     const fileInput = document.getElementById("file-input");
     const dropZone = document.getElementById("drop-zone");
     const importMessage = document.getElementById("import-message");
+    const sampleBtn = document.getElementById("sample-btn");
+    const recentSection = document.getElementById("recent-section");
+    const recentGrid = document.getElementById("recent-grid");
+    const clearRecentsBtn = document.getElementById("clear-recents-btn");
 
     function openDatabase() {
       return new Promise((resolve, reject) => {
-        const request = indexedDB.open("pdf-reader", 1);
-        request.onupgradeneeded = () => request.result.createObjectStore("files");
+        const request = indexedDB.open("pdf-reader", 2);
+        request.onupgradeneeded = (e) => {
+          const db = request.result;
+          if (!db.objectStoreNames.contains("files")) {
+            db.createObjectStore("files");
+          }
+          if (!db.objectStoreNames.contains("recents")) {
+            db.createObjectStore("recents", { keyPath: "id" });
+          }
+        };
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
       });
     }
 
-    async function savePdf(file) {
+    function formatBytes(bytes) {
+      if (!bytes || bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function timeAgo(dateMs) {
+      const sec = Math.floor((Date.now() - dateMs) / 1000);
+      if (sec < 60) return "Vừa xong";
+      const min = Math.floor(sec / 60);
+      if (min < 60) return `${min} phút trước`;
+      const hr = Math.floor(min / 60);
+      if (hr < 24) return `${hr} giờ trước`;
+      const d = Math.floor(hr / 24);
+      return `${d} ngày trước`;
+    }
+
+    async function savePdf(file, customName) {
       const bytes = new Uint8Array(await file.arrayBuffer());
       if (!new TextDecoder("latin1").decode(bytes.subarray(0, 1024)).includes("%PDF-")) {
         throw new Error("File được chọn không phải PDF hợp lệ.");
       }
 
+      const name = customName || file.name;
+      const size = file.size || bytes.byteLength;
+      const id = `${name}|${size}`;
+
       const db = await openDatabase();
       await new Promise((resolve, reject) => {
-        const transaction = db.transaction("files", "readwrite");
-        transaction.objectStore("files").put({
-          bytes,
-          name: file.name,
-          size: file.size
-        }, "current");
-        transaction.oncomplete = resolve;
-        transaction.onerror = () => reject(transaction.error);
+        const tx = db.transaction(["files", "recents"], "readwrite");
+        // Lưu current để viewer mở
+        tx.objectStore("files").put({ bytes, name, size, id }, "current");
+
+        // Cập nhật tủ sách gần đây (giữ tối đa 8 file)
+        const recentsStore = tx.objectStore("recents");
+        const getReq = recentsStore.get(id);
+        getReq.onsuccess = () => {
+          const existing = getReq.result || {};
+          recentsStore.put({
+            id,
+            name,
+            size,
+            bytes,
+            lastOpened: Date.now(),
+            lastPage: existing.lastPage || 1,
+            totalPages: existing.totalPages || 0
+          });
+        };
+
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
       });
     }
 
-    async function openFile(file) {
+    async function openFile(file, customName) {
       if (!file) return;
       importMessage.textContent = "";
       try {
-        await savePdf(file);
+        await savePdf(file, customName);
         location.href = "./viewer.html";
       } catch (error) {
         importMessage.textContent = "Không mở được file: " + error.message;
       }
     }
+
+    async function loadRecentBooks() {
+      try {
+        const db = await openDatabase();
+        const tx = db.transaction("recents", "readonly");
+        const store = tx.objectStore("recents");
+        const req = store.getAll();
+        req.onsuccess = () => {
+          let recents = req.result || [];
+          if (!recents.length) {
+            recentSection.hidden = true;
+            return;
+          }
+          recents.sort((a, b) => (b.lastOpened || 0) - (a.lastOpened || 0));
+          recentSection.hidden = false;
+          recentGrid.replaceChildren();
+
+          recents.slice(0, 6).forEach(doc => {
+            const card = document.createElement("div");
+            card.className = "recent-card";
+
+            const progressPct = doc.totalPages > 0 ? Math.round((doc.lastPage / doc.totalPages) * 100) : 0;
+            const progressText = doc.totalPages > 0 ? `Trang ${doc.lastPage}/${doc.totalPages} (${progressPct}%)` : formatBytes(doc.size);
+
+            card.innerHTML = `
+              <div class="recent-card-icon">PDF</div>
+              <div class="recent-card-info">
+                <div class="recent-card-name" title="${doc.name}">${doc.name}</div>
+                <div class="recent-card-meta">
+                  <span>${progressText}</span>
+                  <span>•</span>
+                  <span>${timeAgo(doc.lastOpened)}</span>
+                </div>
+                ${doc.totalPages > 0 ? `
+                  <div class="recent-progress-bar">
+                    <div class="recent-progress-fill" style="width: ${progressPct}%"></div>
+                  </div>
+                ` : ''}
+              </div>
+              <button type="button" class="recent-card-del" title="Xóa khỏi danh sách" data-id="${doc.id}">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            `;
+
+            card.addEventListener("click", async (e) => {
+              if (e.target.closest(".recent-card-del")) return;
+              try {
+                const dbOpen = await openDatabase();
+                const writeTx = dbOpen.transaction(["files", "recents"], "readwrite");
+                writeTx.objectStore("files").put({
+                  bytes: doc.bytes,
+                  name: doc.name,
+                  size: doc.size,
+                  id: doc.id
+                }, "current");
+                doc.lastOpened = Date.now();
+                writeTx.objectStore("recents").put(doc);
+                writeTx.oncomplete = () => {
+                  location.href = "./viewer.html";
+                };
+              } catch (err) {
+                importMessage.textContent = "Không thể mở lại tài liệu: " + err.message;
+              }
+            });
+
+            card.querySelector(".recent-card-del").addEventListener("click", async (e) => {
+              e.stopPropagation();
+              const dbOpen = await openDatabase();
+              const delTx = dbOpen.transaction("recents", "readwrite");
+              delTx.objectStore("recents").delete(doc.id);
+              delTx.oncomplete = () => loadRecentBooks();
+            });
+
+            recentGrid.appendChild(card);
+          });
+        };
+      } catch (err) {
+        console.warn("Không thể tải tủ sách gần đây:", err);
+      }
+    }
+
+    clearRecentsBtn.addEventListener("click", async () => {
+      const db = await openDatabase();
+      const tx = db.transaction("recents", "readwrite");
+      tx.objectStore("recents").clear();
+      tx.oncomplete = () => loadRecentBooks();
+    });
+
+    sampleBtn.addEventListener("click", async () => {
+      importMessage.textContent = "Đang nạp sách mẫu...";
+      try {
+        const res = await fetch("./sample.pdf");
+        if (!res.ok) throw new Error("Không tìm thấy file sample.pdf");
+        const blob = await res.blob();
+        await openFile(blob, "Sách mẫu thử nghiệm.pdf");
+      } catch (err) {
+        importMessage.textContent = "Lỗi khi nạp sách mẫu: " + err.message;
+      }
+    });
 
     fileInput.addEventListener("change", () => {
       openFile(fileInput.files[0]);
@@ -82,6 +321,10 @@
       dropZone.classList.remove("is-over");
       openFile(event.dataTransfer.files[0]);
     });
+
+    // Tự động nạp tủ sách
+    loadRecentBooks();
   </script>
 </body>
+
 </html>

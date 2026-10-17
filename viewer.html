@@ -1,68 +1,401 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trình xem PDF</title>
-    <link rel="stylesheet" href="./style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trình xem PDF</title>
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-    <section id="reader-view" hidden>
+  <!-- Màn hình đọc sách chính -->
+  <section id="reader-view">
+    <!-- Thanh điều hướng đỉnh (Top Bar) -->
+    <header id="top-bar">
+      <div class="top-bar-left">
+        <button id="open-btn" type="button" class="btn ghost" title="Về trang chủ / Tủ sách" aria-label="Về trang chủ">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          Tủ sách
+        </button>
+
+        <div class="doc-info">
+          <span id="doc-title" class="doc-name" title="Tên tài liệu">Đang tải tài liệu...</span>
+          <span id="doc-badge" class="doc-badge">Trang 1/1</span>
+        </div>
+      </div>
+
+      <div class="top-bar-right">
+        <!-- Nút mở file khác -->
+        <input id="viewer-file-input" type="file" accept="application/pdf" hidden>
+        <button id="viewer-open-file-btn" type="button" class="icon-btn" title="Mở file PDF khác" aria-label="Mở file PDF khác">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            <line x1="12" y1="11" x2="12" y2="17"></line>
+            <line x1="9" y1="14" x2="15" y2="14"></line>
+          </svg>
+        </button>
+
+        <!-- Tìm kiếm trong sách -->
+        <button id="search-open-btn" type="button" class="icon-btn" title="Tìm kiếm từ khóa (Ctrl+F)" aria-label="Tìm kiếm từ khóa">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+
+        <!-- Đánh dấu trang hiện tại (Bookmark) -->
+        <button id="bookmark-toggle-btn" type="button" class="icon-btn" title="Đánh dấu trang này" aria-label="Đánh dấu trang">
+          <svg id="bookmark-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+          </svg>
+        </button>
+
+        <!-- Chế độ trang: Đơn / Đôi / Sách in có bìa riêng -->
+        <div class="mode-switch-group" title="Chế độ hiển thị trang">
+          <button id="mode-single-btn" type="button" class="segmented-btn" data-mode="single" title="Trang đơn">1 trang</button>
+          <button id="mode-spread-btn" type="button" class="segmented-btn" data-mode="spread" title="Trang đôi bình thường">2 trang</button>
+          <button id="mode-book-btn" type="button" class="segmented-btn active" data-mode="book" title="Sách in (Trang bìa riêng)">Sách</button>
+        </div>
+
+        <!-- Chế độ màu đọc sách -->
+        <div class="theme-switch-group" title="Chế độ giao diện đọc">
+          <button type="button" class="segmented-btn active" data-theme-val="light" title="Chế độ Sáng">☀️</button>
+          <button type="button" class="segmented-btn" data-theme-val="sepia" title="Chế độ Màu ấm Sepia">📖</button>
+          <button type="button" class="segmented-btn" data-theme-val="dark" title="Chế độ Tối (Đọc đêm)">🌙</button>
+        </div>
+
+        <!-- Mở Sidebar (Mục lục / Trang / Bookmark) -->
+        <button id="sidebar-toggle-btn" type="button" class="btn ghost" title="Mục lục & Trang (T)" aria-label="Mục lục và danh sách trang">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+          Mục lục
+        </button>
+
+        <!-- Toàn màn hình -->
+        <button id="fullscreen-btn" type="button" class="icon-btn" title="Toàn màn hình (F)" aria-label="Toàn màn hình">
+          <svg class="icon-enter" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <polyline points="9 21 3 21 3 15"></polyline>
+            <line x1="21" y1="3" x2="14" y2="10"></line>
+            <line x1="3" y1="21" x2="10" y2="14"></line>
+          </svg>
+          <svg class="icon-exit" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" hidden>
+            <polyline points="4 14 10 14 10 20"></polyline>
+            <polyline points="20 10 14 10 14 4"></polyline>
+            <line x1="14" y1="10" x2="21" y2="3"></line>
+            <line x1="3" y1="21" x2="10" y2="14"></line>
+          </svg>
+        </button>
+
+        <!-- Trợ giúp phím tắt -->
+        <button id="help-btn" type="button" class="icon-btn" title="Phím tắt (?)" aria-label="Hướng dẫn phím tắt">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </button>
+
+        <!-- Thu gọn / Ẩn thanh công cụ khi đang toàn màn hình -->
+        <button id="fullscreen-topbar-hide-btn" type="button" class="icon-btn" title="Ẩn thanh công cụ (H)" aria-label="Ẩn thanh công cụ" hidden>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Sân khấu hiển thị sách chính -->
     <div id="stage">
-    <div id="book-view">
-      <div id="pages">
-        <canvas id="left-canvas" class="page-canvas"></canvas>
-        <canvas id="right-canvas" class="page-canvas"></canvas>
-        <div id="curl"><div class="reveal"></div><div class="flap"></div></div>
+      <!-- Khung hiển thị canvas sách -->
+      <main id="book-view" data-mode="book">
+        <div id="pages">
+          <canvas id="left-canvas" class="page-canvas"></canvas>
+          <canvas id="right-canvas" class="page-canvas"></canvas>
+          <div id="curl"><div class="reveal"></div><div class="flap"></div></div>
+        </div>
+      </main>
+
+      <!-- Sidebar trượt hợp nhất (Drawer) -->
+      <aside id="sidebar-drawer" aria-label="Bảng điều hướng tài liệu">
+        <div class="sidebar-header">
+          <strong style="font-size: 0.9375rem; color: var(--ink);">Điều hướng tài liệu</strong>
+          <button id="sidebar-close-btn" type="button" class="icon-btn" title="Đóng bảng (Esc)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <!-- 3 Tab chuyển đổi -->
+        <div class="sidebar-tabs">
+          <button id="tab-btn-toc" type="button" class="sidebar-tab-btn active" data-tab="toc">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            Mục lục
+          </button>
+          <button id="tab-btn-thumbs" type="button" class="sidebar-tab-btn" data-tab="thumbs">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            Tất cả trang
+          </button>
+          <button id="tab-btn-bookmarks" type="button" class="sidebar-tab-btn" data-tab="bookmarks">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+            </svg>
+            Dấu trang
+          </button>
+        </div>
+
+        <div class="sidebar-content">
+          <!-- Pane 1: Mục lục -->
+          <div id="pane-toc" class="tab-pane active">
+            <div id="toc-controls" class="toc-controls-bar">
+              <span id="toc-title" style="font-weight: 600;">Mục lục</span>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <label id="toc-offset-wrap" title="Trang PDF = số trang in + độ lệch" style="display: none; font-size: 0.75rem;">
+                  Lệch <input id="toc-offset" type="number" step="1" style="width: 3.5em; padding: 2px;">
+                </label>
+                <button id="toc-change-btn" type="button" class="btn ghost" style="padding: 2px 8px; font-size: 0.75rem;" hidden>Đổi trang</button>
+                <button id="toc-done-btn" type="button" class="btn primary" style="padding: 2px 8px; font-size: 0.75rem;" hidden>Xong</button>
+              </div>
+            </div>
+            <div id="toc-body"></div>
+          </div>
+
+          <!-- Pane 2: Xem tất cả trang dạng lưới 2 cột -->
+          <div id="pane-thumbs" class="tab-pane">
+            <div id="thumbs-grid" class="thumb-grid"></div>
+          </div>
+
+          <!-- Pane 3: Dấu trang người dùng -->
+          <div id="pane-bookmarks" class="tab-pane">
+            <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.8125rem; color: var(--muted);">Các trang đã đánh dấu</span>
+              <button id="bookmark-current-btn" type="button" class="btn ghost" style="font-size: 0.75rem; padding: 4px 8px;">+ Đánh dấu trang này</button>
+            </div>
+            <div id="bookmarks-list" class="bookmark-list"></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Thanh Dock điều khiển nổi đáy (Floating Pill Dock) -->
+    <nav id="floating-dock" aria-label="Menu điều khiển đọc sách">
+      <!-- Cụm chuyển trang -->
+      <div class="dock-group">
+        <button id="prev-btn" type="button" class="icon-btn" title="Trang trước (← hoặc PageUp)" aria-label="Trang trước">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+
+        <div class="dock-page-jump">
+          <input id="page-input" type="number" min="1" step="1" aria-label="Trang hiện tại">
+          <span style="color: var(--muted); font-size: 0.8125rem;">/</span>
+          <span id="page-total" style="font-weight: 600; min-width: 1.5em;">0</span>
+        </div>
+
+        <button id="next-btn" type="button" class="icon-btn" title="Trang sau (→ hoặc PageDown/Space)" aria-label="Trang sau">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
       </div>
-    </div>
-    <button id="toc-btn" type="button" title="Mục lục (T)" aria-expanded="false" aria-controls="toc-panel">Mục lục</button>
-    <button id="browse-btn" type="button" title="Xem tất cả trang (V)" aria-expanded="false" aria-controls="browse-panel">Xem tất cả</button>
-    <aside id="toc-panel" aria-label="Mục lục" hidden>
-      <header>
-        <strong id="toc-title">Mục lục</strong>
-        <label id="toc-offset-wrap" title="Trang PDF = số trang in trong sách + độ lệch" hidden>Lệch <input id="toc-offset" type="number" step="1"></label>
-        <button id="toc-done-btn" type="button" hidden>Xong</button>
-        <button id="toc-change-btn" type="button" hidden>Đổi trang</button>
-        <button id="toc-close-btn" type="button">Đóng</button>
-      </header>
-      <div id="toc-body"></div>
-    </aside>
-    <aside id="browse-panel" aria-label="Xem tất cả trang" hidden>
-      <header>
-        <strong>Tất cả các trang</strong>
-        <button id="browse-close-btn" type="button">Đóng</button>
-      </header>
-      <div id="browse-body"></div>
-    </aside>
-    </div>
-    <div id="top-right">
-      <input id="page-input" type="number" min="1" step="1" aria-label="Đi tới trang">
-      <span aria-hidden="true">|</span>
-      <span id="page-total" aria-label="Tổng số trang">0</span>
-      <button id="fullscreen-btn" type="button" title="Toàn màn hình" aria-label="Toàn màn hình">
-        <svg class="icon-enter" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>
-        <svg class="icon-exit" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4"/></svg>
+
+      <div class="dock-divider"></div>
+
+      <!-- Thanh trượt Scrubber lướt nhanh toàn bộ sách -->
+      <div class="dock-scrubber-wrap" title="Kéo để lướt nhanh các trang">
+        <input id="page-scrubber" type="range" min="1" max="1" value="1">
+      </div>
+
+      <div class="dock-divider"></div>
+
+      <!-- Cụm Zoom -->
+      <div class="dock-group">
+        <button id="zoom-out-btn" type="button" class="icon-btn" title="Thu nhỏ (-)" aria-label="Thu nhỏ">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <line x1="8" y1="11" x2="14" y2="11"></line>
+          </svg>
+        </button>
+
+        <div style="display: flex; align-items: center; gap: 2px;">
+          <input id="zoom-input" type="number" min="25" max="400" step="5" aria-label="Mức phóng to">%
+        </div>
+
+        <button id="zoom-in-btn" type="button" class="icon-btn" title="Phóng to (+)" aria-label="Phóng to">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <line x1="11" y1="8" x2="11" y2="14"></line>
+            <line x1="8" y1="11" x2="14" y2="11"></line>
+          </svg>
+        </button>
+
+        <button id="zoom-reset-btn" type="button" class="btn ghost" style="padding: 4px 8px; font-size: 0.8125rem;" title="Vừa khung màn hình (0)">Vừa khung</button>
+      </div>
+
+      <div class="dock-divider"></div>
+
+      <!-- Ẩn thanh dock -->
+      <button id="dock-hide-btn" type="button" class="icon-btn" title="Ẩn thanh điều khiển (M)" aria-label="Ẩn menu">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
       </button>
-    </div>
-    <nav id="controls" aria-label="Menu điều khiển">
-      <div class="group"><button id="open-btn" type="button">Quay lại</button></div>
-      <div class="group">
-        <button id="prev-btn" type="button" aria-label="Trang trước">Trước</button>
-        <button id="next-btn" type="button" aria-label="Trang sau">Sau</button>
-      </div>
-      <div class="group">
-        <button id="zoom-out-btn" type="button" aria-label="Thu nhỏ">-</button>
-        <input id="zoom-input" type="number" min="25" max="400" step="1" aria-label="Mức zoom (%)">%
-        <button id="zoom-in-btn" type="button" aria-label="Phóng to">+</button>
-        <button id="zoom-reset-btn" type="button">Reset zoom</button>
-      </div>
-      <div class="group">
-        <button id="menu-hide-btn" type="button" aria-label="Ẩn menu điều khiển">Ẩn</button>
-      </div>
     </nav>
-    <button id="menu-open-btn" type="button" aria-label="Hiện menu điều khiển" hidden>Menu</button>
+
+    <!-- Nút mở lại thanh dock khi đang ẩn -->
+    <button id="dock-show-btn" type="button" title="Hiện menu điều khiển (M)" aria-label="Hiện menu điều khiển" hidden>
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
+      </svg>
+      Menu
+    </button>
+
+    <!-- Nút nhỏ góc phải hiện lại thanh công cụ khi toàn màn hình -->
+    <button id="fullscreen-topbar-show-btn" type="button" class="fullscreen-topbar-btn" title="Hiện thanh công cụ (H)" aria-label="Hiện thanh công cụ" hidden>
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </button>
   </section>
+
+  <!-- Modal Tìm kiếm trong sách (Search Modal) -->
+  <div id="search-modal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          Tìm kiếm trong tài liệu
+        </h3>
+        <button id="search-close-btn" type="button" class="icon-btn" title="Đóng (Esc)">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="search-input-box">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--muted);">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input id="search-query-input" type="text" placeholder="Nhập từ khóa cần tìm..." autofocus>
+          <button id="search-exec-btn" type="button" class="btn primary" style="padding: 4px 12px; font-size: 0.8125rem;">Tìm</button>
+        </div>
+        <div id="search-status" style="font-size: 0.8125rem; color: var(--muted); margin-bottom: 8px;"></div>
+        <div id="search-results" class="search-results-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Hướng dẫn phím tắt (Shortcuts Modal) -->
+  <div id="shortcuts-modal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+            <line x1="6" y1="8" x2="6" y2="8"></line>
+            <line x1="10" y1="8" x2="10" y2="8"></line>
+            <line x1="14" y1="8" x2="14" y2="8"></line>
+            <line x1="18" y1="8" x2="18" y2="8"></line>
+            <line x1="6" y1="12" x2="6" y2="12"></line>
+            <line x1="18" y1="12" x2="18" y2="12"></line>
+            <line x1="9" y1="16" x2="15" y2="16"></line>
+          </svg>
+          Bảng phím tắt thao tác nhanh
+        </h3>
+        <button id="shortcuts-close-btn" type="button" class="icon-btn" title="Đóng (Esc)">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="shortcut-row">
+          <span>Sang trang sau</span>
+          <div><kbd>→</kbd> <kbd>PageDown</kbd> <kbd>Space</kbd></div>
+        </div>
+        <div class="shortcut-row">
+          <span>Quay lại trang trước</span>
+          <div><kbd>←</kbd> <kbd>PageUp</kbd> <kbd>Shift+Space</kbd></div>
+        </div>
+        <div class="shortcut-row">
+          <span>Phóng to / Thu nhỏ</span>
+          <div><kbd>+</kbd> <kbd>-</kbd> hoặc <kbd>Cuộn chuột</kbd></div>
+        </div>
+        <div class="shortcut-row">
+          <span>Vừa khung màn hình (Fit)</span>
+          <div><kbd>0</kbd></div>
+        </div>
+        <div class="shortcut-row">
+          <span>Bật/Tắt Toàn màn hình</span>
+          <div><kbd>F</kbd></div>
+        </div>
+        <div class="shortcut-row">
+          <span>Bật/Tắt Mục lục & Bảng trang</span>
+          <div><kbd>T</kbd></div>
+        </div>
+        <div class="shortcut-row">
+          <span>Tìm kiếm từ khóa</span>
+          <div><kbd>Ctrl</kbd> + <kbd>F</kbd></div>
+        </div>
+        <div class="shortcut-row">
+          <span>Ẩn / Hiện thanh điều khiển</span>
+          <div><kbd>M</kbd></div>
+        </div>
+        <div class="shortcut-row">
+          <span>Ẩn / Hiện thanh công cụ (toàn màn hình)</span>
+          <div><kbd>H</kbd></div>
+        </div>
+        <div class="shortcut-row">
+          <span>Đóng bảng / modal</span>
+          <div><kbd>Esc</kbd></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lớp phủ khi kéo thả file mới vào Viewer -->
+  <div id="viewer-drop-overlay">
+    <div class="drop-content">
+      <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 8px;">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="17 8 12 3 7 8"></polyline>
+        <line x1="12" y1="3" x2="12" y2="15"></line>
+      </svg>
+      <div>Thả file PDF vào đây để mở ngay</div>
+    </div>
+  </div>
+
+  <!-- Vùng thông báo Toast -->
+  <div id="toast-container" aria-live="polite"></div>
+
   <script type="module" src="./PDFviewer.js"></script>
 </body>
 </html>
